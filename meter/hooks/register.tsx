@@ -31,7 +31,7 @@ const darkCss = (rules: Record<string, string>) =>
   `<style>@media (prefers-color-scheme: dark){${Object.entries(rules).map(([c, v]) => `.${c}{fill:${v}}`).join('')}}</style>`
 // Desktop lays the band out in pixels; this is about one terminal cell there, for sizing drawings in cells.
 const CELL = 7
-const label = (kind: string) => (/five/i.test(kind) ? '5H' : /seven/i.test(kind) ? '7D' : kind.replace(/[_-]+/g, ' ').toUpperCase())
+const label = (kind: string) => (/five/i.test(kind) ? '5H' : /seven/i.test(kind) ? '7D' : /spend/i.test(kind) ? 'SPEND' : kind.replace(/[_-]+/g, ' ').toUpperCase())
 // Weekly first, then 5-hour, as in the reference band.
 const isFast = (l: Limit) => /five/i.test(l.kind)
 const order = (l: Limit) => (/seven/i.test(l.kind) ? 0 : isFast(l) ? 1 : 2)
@@ -116,7 +116,8 @@ const isEmpty = (t: unknown): boolean => {
 }
 
 export const register: Register = (on, options) => {
-  const fallbackMin = Math.max(1, Number(options.cacheMinutes) || 60)
+  // 0 is auto: 60 minutes on a subscription, 5 on the API.
+  const setMin = Math.max(0, Number(options.cacheMinutes) || 0)
   let lastStepEnd: number | null = null
   // How much the top row has shed to fit on one line (see `need`); kept between draws so it doesn't flap.
   let shed = 0
@@ -197,10 +198,25 @@ export const register: Register = (on, options) => {
     return done
   })
 
+  // Exact, when a subagent finishes: the Agent result splits its cache writes by lifetime.
+  on('tool.call', { tool: 'Agent' }, async ($, e, next) => {
+    const r = await next(e)
+    type Split = { ephemeral_1h_input_tokens: number; ephemeral_5m_input_tokens: number }
+    const c = r.result && !r.isError ? (r.result as { usage?: { cache_creation?: Split | null } }).usage?.cache_creation : null
+    if (c && c.ephemeral_1h_input_tokens + c.ephemeral_5m_input_tokens > 0) {
+      const learned = c.ephemeral_1h_input_tokens >= c.ephemeral_5m_input_tokens ? 60 : 5
+      await update($, vitals, v => ({ ...empty, ...v, ttlMin: learned }))
+    }
+    return r
+  })
+
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e)
     const [v0, open, , now] = await Promise.all([read($, vitals), read($, isOpen), read($, tick), $.clock.now()])
     const v = { ...empty, ...v0 }
+    // The API reports no 5h/7d windows: a reply that came back without any means an API session.
+    const isApi = v.limits.length === 0 && v.lastReplyAt !== null
+    const fallbackMin = setMin || (isApi ? 5 : 60)
     const els = $.ui.resolve(e)
     const { Box, Text, Button } = els
     // The terminal's table answers Svg with an empty box, so ask the surface, not the table.
@@ -219,8 +235,8 @@ export const register: Register = (on, options) => {
     const idle = v.lastReplyAt === null ? null : now - v.lastReplyAt
     const coldIn = idle === null ? null : ttl - idle
     const ttlNote = v.ttlMin === null
-      ? `Lifetime assumed ${fallbackMin} min (the "Cache lifetime" setting).`
-      : `Lifetime ${v.ttlMin} min, observed from cache hits.`
+      ? `Lifetime assumed ${fallbackMin} min (${setMin ? 'the "Cache lifetime" setting' : isApi ? 'the API default' : 'the subscription default'}).`
+      : `Lifetime ${v.ttlMin} min, observed this session.`
     const cache: { tag: string; hue: Hue; note: string; tip: string } | null = working
       ? { tag: 'LIVE', hue: 'blue', note: '', tip: 'Claude is replying; this reply refreshes the prompt cache.' }
       : coldIn === null
@@ -281,7 +297,7 @@ export const register: Register = (on, options) => {
         {/* Never wraps: what doesn't fit was shed above, and a band narrower still clips here. */}
         <Box key="left" columnGap={2} alignItems="center" flexWrap="nowrap" overflow="hidden" minWidth={0} flexGrow={1} flexShrink={1}>
         {level < 2 && <Text key="usage" bold>USAGE</Text>}
-        {limits.length ? limits : <Text dimColor>limits show after the first reply</Text>}
+        {limits.length ? limits : !isApi && <Text dimColor>limits show after the first reply</Text>}
         {ctx !== null && level < 6 && (
           <Box key="ctx" gap={1} alignItems="center" flexShrink={0}>
             <Text>CTX</Text>
