@@ -1,0 +1,8 @@
+{
+  "name": "claude-mods",
+  "owner": { "name": "lettuceketchup" },
+  "plugins": [
+    { "name": "crew", "source": "./crew" },
+    { "name": "meter", "source": "./meter" }
+  ]
+}

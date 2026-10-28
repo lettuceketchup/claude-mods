@@ -1,0 +1,7 @@
+{
+  "name": "crew",
+  "version": "0.1.1",
+  "description": "Running subagents in a band above the prompt: task, model and effort, current tool, time and estimated cost, with this session's history",
+  "license": "MIT",
+  "types": "./types/index.d.ts"
+}

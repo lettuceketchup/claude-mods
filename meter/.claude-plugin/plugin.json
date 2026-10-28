@@ -1,0 +1,15 @@
+{
+  "name": "meter",
+  "version": "0.2.0",
+  "description": "Usage limits, prompt-cache timer, context and spend in a band above the prompt",
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "cacheMinutes": {
+      "title": "Cache lifetime (minutes)",
+      "description": "How long the prompt cache stays warm after a reply: 60 on most subscriptions, 5 on the plain API",
+      "type": "number",
+      "default": 60
+    }
+  }
+}
