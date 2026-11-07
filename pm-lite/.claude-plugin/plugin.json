@@ -1,0 +1,6 @@
+{
+  "name": "pm-lite",
+  "version": "0.1.0",
+  "description": "Five product-management skills (competitive brief, spec, research synthesis, stakeholder update, brainstorming) trimmed from Anthropic's product-management plugin 1.2.0, with no connectors",
+  "license": "Apache-2.0"
+}

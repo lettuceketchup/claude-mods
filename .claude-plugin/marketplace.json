@@ -3,6 +3,7 @@
   "owner": { "name": "lettuceketchup" },
   "plugins": [
     { "name": "crew", "source": "./crew" },
-    { "name": "meter", "source": "./meter" }
+    { "name": "meter", "source": "./meter" },
+    { "name": "pm-lite", "source": "./pm-lite" }
   ]
 }
