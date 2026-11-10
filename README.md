@@ -4,7 +4,7 @@ Claude Code mods.
 
 - **crew**: running subagents in a band above the prompt, with their task, model and effort, current tool, time and estimated cost.
 - **meter**: usage limits, prompt-cache timer, context and spend in a band above the prompt.
-- **india-trip-planner**: a skill for planning trips within India: cost scenarios, a go/no-go check for your dates (tickets, season, closures, permits), route options, and a phone-friendly plan page plus a WhatsApp brief to share with family. For claude.ai or the phone app, zip `india-trip-planner/skills/india-trip-planner` and upload it under Settings → Capabilities → Skills.
+- **india-trip-planner**: a skill for planning trips within India: cost scenarios, a go/no-go check for your dates (tickets, season, closures, permits), route options, and a phone-friendly plan page plus a WhatsApp brief to share with family. The page has a to-scale map of India built in (zoom, numbered places, each route option in its own colour) and opens for anyone with its public link, no Claude account needed. Use Opus or Sonnet with high effort; it needs web search. For claude.ai or the phone app, zip `india-trip-planner/skills/india-trip-planner` and upload it under Settings → Capabilities → Skills.
 
 ## Install
 
