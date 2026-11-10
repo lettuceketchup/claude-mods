@@ -8,6 +8,7 @@ description: Use when the user wants to plan, cost, compare or sanity-check a tr
 Generic planners assume flights, hotels and a credit card. In India the real constraints are train seats that open 60 days out and sell out, last-mile transport from small towns, permits, seasonal closures and, for pilgrimages, registration and darshan logistics. Settle those first, then fill in comfort and sightseeing.
 
 ## Before starting
+- **Model check:** this skill needs web search and careful cross-checking of conflicting sources (a test trip took about 30 searches). It works best on Opus or Sonnet with high effort or extended thinking. If you are a Haiku model, or web search is unavailable, say so once and suggest switching: `/model` and `/effort` in Claude Code, or the model menu and extended thinking in claude.ai. Then continue if the user wants to.
 - **Home base:** use the origin town and its practical railheads from memory or the user's profile if known; otherwise ask, and offer to remember them.
 - **Earlier research:** in Claude Code, look for `trips/*.md` in the working folder. Reuse the notes, but re-verify anything dated or volatile.
 
