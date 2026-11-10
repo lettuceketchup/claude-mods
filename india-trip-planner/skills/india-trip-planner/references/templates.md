@@ -16,7 +16,7 @@ End with one line: **Go**, **Go with care** (what to watch), or **No-go** (and o
 |---|---|---|---|---|---|
 
 ## Plan page data (step 6)
-Copy `assets/plan-page.html`, then replace the JSON inside `<script id="trip" type="application/json">` and set the first-line `<title>` to the trip name (it names the published page). Leave the rest of the file alone. Strings must not contain `</script`. Omit any section you have nothing for; the page hides empty sections.
+Copy `assets/plan-page.html` with a file copy or shell command; never retype it (it holds about 100 KB of built-in map data). Then replace the JSON inside `<script id="trip" type="application/json">` and set the first-line `<title>` to the trip name (it names the published page). Leave the rest of the file alone. Strings must not contain `</script`. Omit any section you have nothing for; the page hides empty sections.
 
 ```json
 {
@@ -32,8 +32,10 @@ Copy `assets/plan-page.html`, then replace the JSON inside `<script id="trip" ty
   "legs": [ { "from": "Gwalior", "to": "Katra",
               "options": [ { "mode": "Train", "name": "12919 Malwa Express", "train": "12919", "dep": "Sat 13:10", "arr": "Sun 14:30",
                              "duration": "25 h", "cost": "₹1,100 (3A)", "note": "GNWL 12 when checked", "recommended": true, "links": [] } ] } ],
-  "maps": [ { "title": "Route", "route": true,
-              "points": [ { "name": "Gwalior Jn", "q": "Gwalior Junction railway station", "lat": 26.215, "lon": 78.18, "kind": "station", "note": "" } ] } ],
+  "maps": [ { "title": "Getting there",
+              "points": [ { "name": "Gwalior Jn", "q": "Gwalior Junction railway station", "lat": 26.215, "lon": 78.182, "kind": "station", "note": "" } ],
+              "routes": [ { "name": "Direct train from Gwalior", "note": "about 25 h door to door · ₹1,500 per person", "recommended": true,
+                            "legs": [ { "from": "Shivpuri", "to": "Gwalior Jn", "by": "road", "name": "Taxi", "time": "2.5 h", "km": 115, "note": "" } ] } ] } ],
   "budget": { "rows": [ { "item": "Transport", "pp": 3000, "total": 12000 } ], "buffer": 15 },
   "checklist": [ "Photo ID for every traveller" ],
   "whatsapp": "Same text as the WhatsApp brief",
@@ -43,7 +45,11 @@ Copy `assets/plan-page.html`, then replace the JSON inside `<script id="trip" ty
 ```
 
 Page rules:
-- **Maps**: one map per scale (the route across India; the area around the main site). At most 8 points per map: stations, stay, the main sight, and help (hospital, police, help desk). Point `kind` is one of `station`, `stay`, `sight`, `help`, `stop`. `q` is the Google Maps search text, which beats the coordinates for accuracy. Take coordinates from a map search; they only place the dots on the drawn map. With `"route": true` the points join in order and the page adds an "Open the whole route" button.
+- **Maps**: the page draws them to scale on a built-in map of India (state borders, major cities), with zoom, numbered pins and a Google Maps link per place. Nothing to fetch.
+  - One map per scale: "Getting there" across India, and "Around <place>" for the town and the walk or trek. A place a few km from another belongs on the local map, not the route map.
+  - At most 8 points per map: stations, airports, stay, the main sights, and help (hospital, police, help desk). `kind` is one of `station`, `stay`, `sight`, `help`, `stop`. `q` is the Google Maps search text, which beats coordinates for accuracy. Take coordinates from a map search; they place the pins.
+  - `routes`: one per option you compared (up to 4), each a chain of `legs` whose `from` and `to` are point names. Each route gets its own colour and button; mark the one you recommend. `by` is `train`, `road`, `bus`, `flight`, `trek`, `walk` or `boat` and sets the line style. `name` (train number and name, Taxi, Bus), `time` and `km` make the leg's label. Use real figures you found, rounded.
+  - A local map usually has a single route (the day's walk or trek). A map with no `routes` shows pins only.
 - **Train options**: set `train` to the number, and the page adds running-status and schedule links.
 - **Links**: give every stay, sight and booking its official link where one exists. The page adds Google Maps links for each map point, so family can keep researching from any line.
 
