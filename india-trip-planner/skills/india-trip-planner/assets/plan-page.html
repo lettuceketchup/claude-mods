@@ -1,0 +1,269 @@
+<title>Trip Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one phone-width column, sticky section chips, cards only for legs and maps. System fonts: nothing to download. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #1b2230; --muted: #5d6779; --line: #dfe3ea;
+  --accent: #1f4fa3; --accent-soft: #e6eefb;
+  --good: #1d7a46; --good-bg: #e3f4ea; --warn: #9a5b00; --warn-bg: #fdf0d9; --bad: #b3261e; --bad-bg: #fbe4e2;
+  --k-station: #1f4fa3; --k-stay: #7a3fb0; --k-sight: #c2410c; --k-help: #b3261e; --k-stop: #5d6779;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11151c; --surface: #1a202a; --fg: #e8ebf1; --muted: #9aa4b5; --line: #2c3442;
+  --accent: #8db4ff; --accent-soft: #1d2b45;
+  --good: #6fd29a; --good-bg: #16301f; --warn: #f2bd62; --warn-bg: #362811; --bad: #ff8f86; --bad-bg: #3a1a18;
+  --k-station: #8db4ff; --k-stay: #c79bf0; --k-sight: #ff9b62; --k-help: #ff8f86; --k-stop: #9aa4b5;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11151c; --surface: #1a202a; --fg: #e8ebf1; --muted: #9aa4b5; --line: #2c3442;
+  --accent: #8db4ff; --accent-soft: #1d2b45;
+  --good: #6fd29a; --good-bg: #16301f; --warn: #f2bd62; --warn-bg: #362811; --bad: #ff8f86; --bad-bg: #3a1a18;
+  --k-station: #8db4ff; --k-stay: #c79bf0; --k-sight: #ff9b62; --k-help: #ff8f86; --k-stop: #9aa4b5;
+  color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--font); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+main, header .in, nav .in { max-width: 680px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header .in { padding-block: 20px 12px; }
+h1 { font-size: 1.6rem; line-height: 1.2; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.1rem; margin: 0 0 10px; }
+h3 { font-size: 1rem; margin: 0; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.verdict { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-weight: 500; }
+.verdict.go { background: var(--good-bg); color: var(--good); }
+.verdict.care { background: var(--warn-bg); color: var(--warn); }
+.verdict.nogo { background: var(--bad-bg); color: var(--bad); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px 16px; margin: 14px 0 0; }
+.facts dt { font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+nav .in { display: flex; gap: 6px; overflow-x: auto; padding-block: 8px; scrollbar-width: none; }
+nav a { flex: none; text-decoration: none; padding: 5px 12px; border-radius: 999px; background: var(--accent-soft); font-size: .85rem; }
+section { padding-block: 22px 4px; scroll-margin-top: 56px; }
+.list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.row { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; }
+.row > :first-child { min-width: 0; }
+.pill { flex: none; font-size: .75rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--line); color: var(--fg); white-space: nowrap; }
+.pill.pass, .pill.confirmed { background: var(--good-bg); color: var(--good); }
+.pill.risky, .pill.waitlisted, .pill.opennow { background: var(--warn-bg); color: var(--warn); }
+.pill.fail { background: var(--bad-bg); color: var(--bad); }
+.note { color: var(--muted); font-size: .9rem; }
+.links { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .9rem; }
+.day { border-left: 3px solid var(--accent); padding-left: 12px; margin-bottom: 16px; }
+.day .lbl { font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.item { display: grid; grid-template-columns: 3.4rem 1fr; gap: 8px; margin-top: 8px; }
+.item time { font-variant-numeric: tabular-nums; color: var(--muted); }
+.item > div { min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+.opt { padding-block: 10px; border-top: 1px solid var(--line); }
+.opt:first-of-type { border-top: 0; }
+.opt .meta { font-variant-numeric: tabular-nums; }
+.rec { font-size: .72rem; font-weight: 700; color: var(--good); letter-spacing: .04em; text-transform: uppercase; }
+.map svg { width: 100%; height: auto; display: block; }
+.map text { font: 600 14px var(--font); fill: var(--fg); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .8rem; color: var(--muted); margin: 6px 0; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.btn { display: inline-block; font: inherit; font-weight: 600; padding: 8px 14px; border-radius: 10px; border: 0; background: var(--accent); color: var(--surface); text-decoration: none; cursor: pointer; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+th:not(:first-child), td:not(:first-child) { text-align: right; }
+tfoot td { font-weight: 700; }
+textarea { width: 100%; box-sizing: border-box; min-height: 12rem; font: .9rem/1.45 var(--font); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.check { display: flex; gap: 10px; align-items: flex-start; }
+.check input { margin-top: 4px; width: 18px; height: 18px; flex: none; }
+footer { color: var(--muted); font-size: .8rem; padding-block: 24px; }
+</style>
+
+<header><div class="in" id="top"></div></header>
+<nav aria-label="Sections"><div class="in" id="nav"></div></nav>
+<main id="main"></main>
+
+<!-- Trip data. Claude replaces only this JSON; schema in references/templates.md. -->
+<script id="trip" type="application/json">
+{
+  "title": "Vaishno Devi (example)",
+  "subtitle": "Shivpuri → Katra · example data, not a real booking",
+  "updated": "2026-11-10",
+  "verdict": { "status": "care", "text": "Example page. Replace this data with a real trip." },
+  "facts": [
+    { "label": "Dates", "value": "12–16 Dec" }, { "label": "Travellers", "value": "4" },
+    { "label": "Cost per person", "value": "₹9,500" }, { "label": "Total", "value": "₹38,000" }
+  ],
+  "checks": [
+    { "name": "Tickets", "status": "risky", "note": "Return waitlisted in the example", "url": "https://www.irctc.co.in/" },
+    { "name": "Season", "status": "pass", "note": "Cold, crowds ease after November" }
+  ],
+  "bookings": [
+    { "date": "2026-10-13", "what": "Onward train", "where": "IRCTC", "url": "https://www.irctc.co.in/", "status": "confirmed" },
+    { "date": "2026-10-17", "what": "Return train", "where": "IRCTC", "url": "https://www.irctc.co.in/", "status": "to book" }
+  ],
+  "days": [
+    { "label": "Day 1", "title": "Shivpuri to Gwalior, overnight train",
+      "items": [ { "time": "06:00", "text": "Taxi to Gwalior Jn (about 115 km)", "links": [ { "label": "Directions", "url": "https://www.google.com/maps/dir/?api=1&origin=Shivpuri&destination=Gwalior+Junction" } ] } ] }
+  ],
+  "legs": [
+    { "from": "Gwalior", "to": "Katra",
+      "options": [
+        { "mode": "Train", "name": "12919 Malwa Express", "train": "12919", "dep": "check", "arr": "next afternoon", "duration": "", "cost": "", "note": "Example only", "recommended": true }
+      ] }
+  ],
+  "maps": [
+    { "title": "Route", "route": true, "points": [
+      { "name": "Shivpuri", "q": "Shivpuri, Madhya Pradesh", "lat": 25.43, "lon": 77.66, "kind": "stop" },
+      { "name": "Gwalior Jn", "q": "Gwalior Junction railway station", "lat": 26.216, "lon": 78.182, "kind": "station" },
+      { "name": "Katra (SVDK)", "q": "Shri Mata Vaishno Devi Katra railway station", "lat": 32.962, "lon": 74.938, "kind": "station" }
+    ] },
+    { "title": "Around Katra", "points": [
+      { "name": "Katra station", "q": "Shri Mata Vaishno Devi Katra railway station", "lat": 32.962, "lon": 74.938, "kind": "station" },
+      { "name": "Yatra registration", "q": "Yatra Registration Counter Katra bus stand", "lat": 32.991, "lon": 74.932, "kind": "help", "note": "collect yatra slip" },
+      { "name": "Banganga", "q": "Banganga checkpost Katra", "lat": 32.996, "lon": 74.944, "kind": "stop", "note": "trek starts" },
+      { "name": "Bhawan", "q": "Mata Vaishno Devi Bhawan", "lat": 33.03, "lon": 74.948, "kind": "sight" }
+    ] }
+  ],
+  "budget": { "rows": [ { "item": "Transport", "pp": 3000, "total": 12000 }, { "item": "Stay", "pp": 3500, "total": 14000 }, { "item": "Food and local", "pp": 3000, "total": 12000 } ], "buffer": 15 },
+  "checklist": [ "Photo ID for every traveller", "Warm jacket and walking shoes" ],
+  "whatsapp": "*Vaishno Devi trip (example)*\nFull plan: <link>",
+  "links": [ { "label": "Shrine board (official)", "url": "https://www.maavaishnodevi.org/" } ],
+  "sources": [ { "label": "Example source", "url": "https://www.maavaishnodevi.org/", "checked": "2026-11-10" } ]
+}
+</script>
+<script>
+(function () {
+  const D = JSON.parse(document.getElementById('trip').textContent);
+  const $ = (tag, attrs, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v == null || v === false) continue;
+      if (k === 'class') n.className = v; else n.setAttribute(k, v);
+    }
+    for (const k of kids.flat()) if (k != null && k !== '') n.append(k.nodeType ? k : String(k));
+    return n;
+  };
+  const safe = u => (typeof u === 'string' && /^https:\/\//.test(u)) ? u : null;
+  const link = (label, url) => safe(url) ? $('a', { href: url, target: '_blank', rel: 'noopener' }, label) : null;
+  const linkRow = ls => { const a = (ls || []).map(l => link(l.label, l.url)).filter(Boolean); return a.length ? $('div', { class: 'links' }, a) : null; };
+  const gm = q => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+  const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const pill = (s, cls) => $('span', { class: 'pill ' + (cls || s || '').replace(/\s+/g, '') }, s);
+  const nav = document.getElementById('nav'), main = document.getElementById('main');
+  const section = (id, title, ...kids) => {
+    main.append($('section', { id }, $('h2', {}, title), ...kids));
+    nav.append($('a', { href: '#' + id }, title));
+  };
+
+  // Header
+  document.title = D.title || 'Trip Plan';
+  const top = document.getElementById('top');
+  top.append($('h1', {}, D.title), D.subtitle && $('p', { class: 'sub' }, D.subtitle));
+  if (D.verdict) top.append($('div', { class: 'verdict ' + (D.verdict.status || '') }, D.verdict.text));
+  if (D.facts?.length) top.append($('dl', { class: 'facts' }, D.facts.map(f => $('div', {}, $('dt', {}, f.label), $('dd', {}, f.value)))));
+
+  if (D.checks?.length) section('checks', 'Checks', $('ul', { class: 'list' }, D.checks.map(c =>
+    $('li', {}, $('div', { class: 'row' }, $('strong', {}, c.name), pill(c.status)), c.note && $('div', { class: 'note' }, c.note), linkRow([{ label: 'Source', url: c.url }])))));
+
+  if (D.bookings?.length) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const when = d => { const t = new Date(d + 'T00:00'); const n = Math.round((t - today) / 864e5);
+      return isNaN(n) ? '' : n === 0 ? 'today' : n > 0 ? `in ${n} day${n > 1 ? 's' : ''}` : 'opened'; };
+    const fmt = d => { const t = new Date(d + 'T00:00'); return isNaN(t) ? d : t.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }); };
+    section('bookings', 'Bookings', $('ul', { class: 'list' }, [...D.bookings].sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(b =>
+      $('li', {}, $('div', { class: 'row' }, $('strong', {}, b.what), pill(b.status)),
+        $('div', { class: 'note' }, `${fmt(b.date)} · ${when(b.date)}${b.where ? ' · ' + b.where : ''}`), linkRow([{ label: 'Book', url: b.url }])))));
+  }
+
+  if (D.days?.length) section('days', 'Day by day', D.days.map(d => $('div', { class: 'day' },
+    d.label && $('div', { class: 'lbl' }, d.label), $('h3', {}, d.title),
+    (d.items || []).map(i => $('div', { class: 'item' }, $('time', {}, i.time || ''), $('div', {}, i.text, linkRow(i.links)))))));
+
+  if (D.legs?.length) section('travel', 'Travel', D.legs.map(l => $('div', { class: 'card' },
+    $('h3', {}, `${l.from} → ${l.to}`),
+    (l.options || []).map(o => {
+      const extra = o.train ? [{ label: 'Running status', url: 'https://www.railyatri.in/live-train-status/' + o.train }, { label: 'Schedule', url: 'https://erail.in/train-enquiry/' + o.train }] : [];
+      return $('div', { class: 'opt' }, o.recommended && $('div', { class: 'rec' }, 'Recommended'),
+        $('div', { class: 'row' }, $('strong', {}, o.name || o.mode), $('span', { class: 'note' }, o.mode)),
+        $('div', { class: 'meta' }, [o.dep && `Dep ${o.dep}`, o.arr && `Arr ${o.arr}`, o.duration, o.cost].filter(Boolean).join(' · ')),
+        o.note && $('div', { class: 'note' }, o.note), linkRow([...extra, ...(o.links || [])]));
+    }))));
+
+  // Maps: drawn from coordinates, no tiles (the artifact sandbox blocks external images). Tap a dot to open Google Maps.
+  // ponytail: labels can overlap when points sit close together; keep to ~8 points per map, split by scale if crowded.
+  const KINDS = { station: 'Station', stay: 'Stay', sight: 'Sight', help: 'Help', stop: 'Stop' };
+  const drawMap = m => {
+    const pts = (m.points || []).filter(p => isFinite(p.lat) && isFinite(p.lon));
+    const W = 400, pad = 36;
+    const card = $('div', { class: 'card map' }, $('h3', {}, m.title));
+    if (pts.length) {
+      const k = Math.cos(pts.reduce((s, p) => s + p.lat, 0) / pts.length * Math.PI / 180);
+      const xs = pts.map(p => p.lon * k), ys = pts.map(p => -p.lat);
+      const x0 = Math.min(...xs), y0 = Math.min(...ys);
+      const sx = Math.max(Math.max(...xs) - x0, 1e-3), sy = Math.max(Math.max(...ys) - y0, 1e-3);
+      const H = Math.round(Math.min(460, Math.max(220, (W - 2 * pad) * sy / sx + 2 * pad)));
+      const s = Math.min((W - 2 * pad) / sx, (H - 2 * pad) / sy);
+      const ox = (W - sx * s) / 2, oy = (H - sy * s) / 2;
+      const P = pts.map((p, i) => [ox + (xs[i] - x0) * s, oy + (ys[i] - y0) * s]);
+      const NS = 'http://www.w3.org/2000/svg';
+      const sv = (tag, a) => { const n = document.createElementNS(NS, tag); for (const k in a) n.setAttribute(k, a[k]); return n; };
+      const svg = sv('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': m.title + ' map' });
+      if (m.route && P.length > 1) svg.append(sv('polyline', { points: P.map(p => p.join(',')).join(' '), fill: 'none', stroke: 'var(--muted)', 'stroke-width': 2, 'stroke-dasharray': '5 4' }));
+      const placed = [];
+      pts.forEach((p, i) => {
+        const [x, y] = P[i], left = x > W * 0.62;
+        let ly = y + 5;
+        while (placed.some(([px, py]) => Math.abs(px - x) < 120 && Math.abs(py - ly) < 16)) ly += 16; // nudge clashing labels down
+        placed.push([x, ly]);
+        const a = sv('a', { href: gm(p.q || p.name), target: '_blank' });
+        a.append(sv('circle', { cx: x, cy: y, r: 7, fill: `var(--k-${KINDS[p.kind] ? p.kind : 'stop'})`, stroke: 'var(--surface)', 'stroke-width': 2 }));
+        const t = sv('text', { x: left ? x - 11 : x + 11, y: ly, 'text-anchor': left ? 'end' : 'start' }); t.textContent = p.name;
+        a.append(t); svg.append(a);
+      });
+      card.append(svg);
+      const used = [...new Set(pts.map(p => KINDS[p.kind] ? p.kind : 'stop'))];
+      card.append($('div', { class: 'legend' }, used.map(k => $('span', {}, $('span', { class: 'dot', style: `background:var(--k-${k})` }), KINDS[k]))));
+    }
+    if (m.route && (m.points || []).length > 1) {
+      const q = m.points.map(p => p.q || p.name);
+      const u = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(q[0]) + '&destination=' + encodeURIComponent(q[q.length - 1]) +
+        (q.length > 2 ? '&waypoints=' + encodeURIComponent(q.slice(1, -1).slice(0, 8).join('|')) : '');
+      card.append($('p', {}, $('a', { class: 'btn', href: u, target: '_blank', rel: 'noopener' }, 'Open the whole route in Google Maps')));
+    }
+    card.append($('ul', { class: 'list' }, (m.points || []).map(p => $('li', {}, $('div', { class: 'row' },
+      $('span', {}, p.name, p.note && $('span', { class: 'note' }, ' · ' + p.note)), $('a', { href: gm(p.q || p.name), target: '_blank', rel: 'noopener' }, 'Map'))))));
+    return card;
+  };
+  if (D.maps?.length) section('maps', 'Maps', D.maps.map(drawMap));
+
+  if (D.budget?.rows?.length) {
+    const b = D.budget, pp = b.rows.reduce((s, r) => s + (+r.pp || 0), 0), tot = b.rows.reduce((s, r) => s + (+r.total || 0), 0), f = (+b.buffer || 0) / 100;
+    const foot = [$('tr', {}, $('td', {}, 'Subtotal'), $('td', {}, inr(pp)), $('td', {}, inr(tot)))];
+    if (f) foot.push($('tr', {}, $('td', {}, `Buffer ${b.buffer}%`), $('td', {}, inr(pp * f)), $('td', {}, inr(tot * f))),
+      $('tr', {}, $('td', {}, 'Total'), $('td', {}, inr(pp * (1 + f))), $('td', {}, inr(tot * (1 + f)))));
+    section('budget', 'Budget', $('div', { class: 'tablewrap' }, $('table', {},
+      $('thead', {}, $('tr', {}, $('th', {}, ''), $('th', {}, 'Per person'), $('th', {}, 'Group'))),
+      $('tbody', {}, b.rows.map(r => $('tr', {}, $('td', {}, r.item), $('td', {}, inr(+r.pp || 0)), $('td', {}, inr(+r.total || 0))))),
+      $('tfoot', {}, foot))));
+  }
+
+  if (D.checklist?.length) section('checklist', 'Checklist', $('ul', { class: 'list' }, D.checklist.map((c, i) =>
+    $('li', {}, $('label', { class: 'check' }, $('input', { type: 'checkbox', id: 'c' + i }), $('span', {}, c))))));
+
+  if (D.whatsapp) {
+    const ta = $('textarea', { id: 'wa', readonly: '' }); ta.value = D.whatsapp;
+    const btn = $('button', { class: 'btn', type: 'button' }, 'Copy message');
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(D.whatsapp).then(() => { btn.textContent = 'Copied'; },
+        () => { ta.focus(); ta.select(); btn.textContent = 'Selected: copy it'; });
+    });
+    section('share', 'Share', $('p', { class: 'note' }, 'Ready to paste into WhatsApp.'), ta, $('p', {}, btn));
+  }
+
+  if (D.links?.length) section('links', 'Research further', $('ul', { class: 'list' }, D.links.map(l => link(l.label, l.url)).filter(Boolean).map(a => $('li', {}, a))));
+
+  if (D.sources?.length) section('sources', 'Sources', $('ul', { class: 'list note' }, D.sources.map(s =>
+    $('li', {}, link(s.label || s.url, s.url) || s.label, s.checked && ` · checked ${s.checked}`))));
+
+  main.append($('footer', {}, `Updated ${D.updated || ''}. Timings, fares and rules change: check the links before booking.`));
+})();
+</script>

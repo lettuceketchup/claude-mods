@@ -4,6 +4,7 @@
   "plugins": [
     { "name": "crew", "source": "./crew" },
     { "name": "meter", "source": "./meter" },
-    { "name": "pm-lite", "source": "./pm-lite" }
+    { "name": "pm-lite", "source": "./pm-lite" },
+    { "name": "india-trip-planner", "source": "./india-trip-planner" }
   ]
 }
